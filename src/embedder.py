@@ -10,5 +10,3 @@ def embed_chunks(chunks):
     texts = [chunk["text"] for chunk in chunks]
     vectors = model.encode(texts, show_progress_bar=True)
     return vectors
-
-
