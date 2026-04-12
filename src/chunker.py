@@ -1,4 +1,6 @@
 from langchain_text_splitters import RecursiveCharacterTextSplitter
+import sys
+sys.path.append(".")
 from config import CHUNK_SIZE, CHUNK_OVERLAP
 
 
