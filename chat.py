@@ -5,19 +5,26 @@ from src.llm import get_answer
 from config import TOP_K, MAX_HISTORY_TURNS, HYBRID_ALPHA
 
 
-def retrieve_chunks(question):
+def retrieve_chunks(question, verbose=False):
     question_vector = embed_chunks([{"text": question}])[0]
 
     client = get_client()
     chunks = query_chunks(client, question, question_vector, TOP_K, HYBRID_ALPHA)
     client.close()
 
+    if verbose:
+        print(f"  Retrieved {len(chunks)} chunks | scores: {[round(c['score'], 4) for c in chunks]}\n")
+
     return chunks
 
 
-def chat():
+def chat(verbose=False):
     print("\n=== PDF Q&A Chat ===")
-    print("Type your question and press Enter. Type 'exit' or 'quit' to end.\n")
+    print("Type your question and press Enter. Type 'exit' or 'quit' to end.")
+    if verbose:
+        print("(verbose mode on)\n")
+    else:
+        print()
 
     history = []
 
@@ -31,9 +38,7 @@ def chat():
             print("Ending chat session.")
             break
 
-        chunks = retrieve_chunks(question)
-        print(f"  Retrieved {len(chunks)} chunks | scores: {[round(c['score'], 4) for c in chunks]}\n")
-
+        chunks = retrieve_chunks(question, verbose=verbose)
         answer = get_answer(chunks, question, history)
 
         pages = sorted(set(chunk["page"] for chunk in chunks))
@@ -47,4 +52,5 @@ def chat():
 
 
 if __name__ == "__main__":
-    chat()
+    verbose = "--verbose" in sys.argv
+    chat(verbose=verbose)
