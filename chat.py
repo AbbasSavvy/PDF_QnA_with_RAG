@@ -36,7 +36,11 @@ def chat():
 
         answer = get_answer(chunks, question, history)
 
-        print(f"Assistant: {answer}\n")
+        pages = sorted(set(chunk["page"] for chunk in chunks))
+        pages_str = ", ".join(f"Page {p}" for p in pages)
+
+        print(f"Assistant: {answer}")
+        print(f"Sources: {pages_str}\n")
 
         history.append((question, answer))
         history = history[-MAX_HISTORY_TURNS:]

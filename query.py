@@ -23,11 +23,15 @@ def query(question):
     print("\n--- Querying Ollama ---")
     answer = get_answer(chunks, question)
 
-    print(f"\n{'='*60}")
+    pages = sorted(set(chunk["page"] for chunk in chunks))
+    pages_str = ", ".join(f"Page {p}" for p in pages)
+
+    print(f"\n{'=' * 60}")
     print("Answer:")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
     print(answer)
-    print(f"{'='*60}\n")
+    print(f"Sources: {pages_str}")
+    print(f"{'=' * 60}\n")
 
 
 if __name__ == "__main__":
