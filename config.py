@@ -28,3 +28,7 @@ MAX_HISTORY_TURNS = 3
 # Groq
 GROQ_BASE_URL = "https://api.groq.com/openai/v1"
 GROQ_MODEL = "llama-3.3-70b-versatile"
+
+# Paths
+ASSETS_DIR = "assets"
+METADATA_PATH = "assets/metadata.json"
