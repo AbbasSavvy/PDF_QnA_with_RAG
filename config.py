@@ -2,8 +2,8 @@
 ASSETS_DIR = "assets"
 
 # Chunking
-CHUNK_SIZE = 512
-CHUNK_OVERLAP = 64
+CHUNK_SIZE = 768
+CHUNK_OVERLAP = 128
 
 # Embedding
 EMBEDDING_MODEL = "all-MiniLM-L6-v2"
