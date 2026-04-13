@@ -47,3 +47,25 @@ def store_chunks(client, chunks, vectors):
             )
     print(f"Stored {len(chunks)} chunks in Weaviate")
 
+def query_chunks(client, question, question_vector, top_k, alpha):
+    collection = client.collections.get(COLLECTION_NAME)
+
+    results = collection.query.hybrid(
+        query=question,
+        vector=question_vector.tolist(),
+        alpha=alpha,
+        limit=top_k,
+        return_properties=["text", "source", "page"],
+        return_metadata=wvc.query.MetadataQuery(score=True)
+    )
+
+    chunks = []
+    for obj in results.objects:
+        chunks.append({
+            "text": obj.properties["text"],
+            "source": obj.properties["source"],
+            "page": obj.properties["page"],
+            "score": obj.metadata.score
+        })
+
+    return chunks
