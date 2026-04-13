@@ -32,7 +32,7 @@ def _extract_metadata_from_spec(pdf_metadata):
     metadata = {
         "title": None,
         "authors": None,
-        "institution": None,  # not a PDF spec field — always None from this path
+        "institution": None,
     }
 
     if not pdf_metadata:
@@ -97,6 +97,7 @@ def _merge_metadata(spec, heuristic):
 
 def load_pdf(path):
     pages = []
+    tables = []
     metadata = {}
 
     with pdfplumber.open(path) as pdf:
