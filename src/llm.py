@@ -27,7 +27,6 @@ Answer:"""
 
 
 def get_answer(chunks, question, history=None):
-    print(f"DEBUG: {len(chunks)} chunks, first: {chunks[0]['text'][:80] if chunks else 'EMPTY'}")
 
     client = OpenAI(
         base_url=OLLAMA_BASE_URL,
