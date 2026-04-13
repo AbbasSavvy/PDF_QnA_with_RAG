@@ -54,4 +54,3 @@ if __name__ == "__main__":
         print("Usage: python query.py \"your question here\"")
         sys.exit(1)
     query(sys.argv[1])
-    
