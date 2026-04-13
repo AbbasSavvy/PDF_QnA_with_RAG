@@ -19,3 +19,4 @@ OLLAMA_MODEL = "llama3.2"
 
 # Retrieval
 TOP_K = 10
+CERTAINTY_THRESHOLD = 0.75
