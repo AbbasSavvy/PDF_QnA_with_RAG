@@ -2,7 +2,8 @@ import sys
 from src.embedder import embed_chunks
 from src.vector_store import get_client, query_chunks
 from src.llm import get_answer
-from config import COLLECTION_NAME, TOP_K, HYBRID_ALPHA
+from src.utils import load_metadata
+from config import TOP_K, HYBRID_ALPHA
 
 
 def query(question, verbose=False, confidential=True):
@@ -26,7 +27,8 @@ def query(question, verbose=False, confidential=True):
             print(f"  [{i}] Page {chunk['page']} | score={chunk['score']:.4f} — {chunk['text'][:80].strip()}...")
         print("\n--- Querying LLM ---")
 
-    answer = get_answer(chunks, question, confidential=confidential)
+    doc_metadata = load_metadata()
+    answer = get_answer(chunks, question, confidential=confidential, doc_metadata=doc_metadata)
 
     pages = sorted(set(chunk["page"] for chunk in chunks))
     pages_str = ", ".join(f"Page {p}" for p in pages)
