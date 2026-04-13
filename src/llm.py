@@ -3,7 +3,10 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from openai import OpenAI
-from config import OLLAMA_BASE_URL, OLLAMA_MODEL
+from dotenv import load_dotenv
+from config import OLLAMA_BASE_URL, OLLAMA_MODEL, GROQ_BASE_URL, GROQ_MODEL
+
+load_dotenv()
 
 
 def build_prompt(chunks, question, history=None):
@@ -26,17 +29,25 @@ Answer:"""
     return prompt
 
 
-def get_answer(chunks, question, history=None):
+def get_answer(chunks, question, history=None, confidential=True):
 
-    client = OpenAI(
-        base_url=OLLAMA_BASE_URL,
-        api_key="ollama",
-    )
+    if confidential:
+        client = OpenAI(
+            base_url=OLLAMA_BASE_URL,
+            api_key="ollama",
+        )
+        model = OLLAMA_MODEL
+    else:
+        client = OpenAI(
+            base_url=GROQ_BASE_URL,
+            api_key=os.getenv("GROQ_API_KEY"),
+        )
+        model = GROQ_MODEL
 
     prompt = build_prompt(chunks, question, history)
 
     response = client.chat.completions.create(
-        model=OLLAMA_MODEL,
+        model=model,
         messages=[
             {
                 "role": "system",
