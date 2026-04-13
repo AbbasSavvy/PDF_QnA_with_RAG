@@ -38,6 +38,19 @@ def query(question):
                 "distance": distance
             })
 
+    # Fallback: if threshold filtered too aggressively, use all results
+    if len(chunks) < 3:
+        print(f"  (threshold filtered to {len(chunks)} chunks — falling back to all results)")
+        chunks = []
+        for obj in results.objects:
+            chunks.append({
+                "text": obj.properties["text"],
+                "source": obj.properties["source"],
+                "page": obj.properties["page"],
+                "certainty": obj.metadata.certainty,
+                "distance": obj.metadata.distance
+            })
+
     client.close()
 
     # Step 3 — Show retrieved chunks
