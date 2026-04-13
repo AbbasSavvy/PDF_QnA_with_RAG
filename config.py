@@ -20,3 +20,6 @@ OLLAMA_MODEL = "llama3.2"
 # Retrieval
 TOP_K = 10
 CERTAINTY_THRESHOLD = 0.70
+
+# Conversation memory
+MAX_HISTORY_TURNS = 3
