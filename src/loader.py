@@ -115,15 +115,11 @@ def load_pdf(path):
         for i, page in enumerate(pdf.pages):
             text = page.extract_text() or ""
 
-            tables = page.extract_tables()
-            table_blocks = []
-            for table in tables:
-                md = _table_to_markdown(table)
-                if md:
-                    table_blocks.append(md)
-
-            if table_blocks:
-                text = text + "\n\n" + "\n\n".join(table_blocks)
+            # Extract tables separately — do NOT append to page text
+            page_tables = page.extract_tables()
+            for table in page_tables:
+                if table and len(table) >= 2:
+                    tables.append((i + 1, table))
 
             if text.strip():
                 pages.append({
@@ -132,4 +128,4 @@ def load_pdf(path):
                     "source": path
                 })
 
-    return pages, metadata
+    return pages, tables, metadata
