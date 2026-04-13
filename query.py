@@ -1,9 +1,8 @@
 import sys
 from src.embedder import embed_chunks
-from src.vector_store import get_client
+from src.vector_store import get_client, query_chunks
 from src.llm import get_answer
-from config import COLLECTION_NAME, TOP_K, CERTAINTY_THRESHOLD
-import weaviate.classes as wvc
+from config import COLLECTION_NAME, TOP_K, HYBRID_ALPHA
 
 
 def query(question):
@@ -13,50 +12,16 @@ def query(question):
     print("--- Embedding question ---")
     question_vector = embed_chunks([{"text": question}])[0]
 
-    # Step 2 — Retrieve top-K chunks from Weaviate
-    print(f"--- Retrieving top {TOP_K} chunks from Weaviate ---")
+    # Step 2 — Retrieve chunks via hybrid search
+    print(f"--- Hybrid search (alpha={HYBRID_ALPHA}) ---")
     client = get_client()
-    collection = client.collections.get(COLLECTION_NAME)
-
-    results = collection.query.near_vector(
-        near_vector=question_vector.tolist(),
-        limit=TOP_K,
-        return_properties=["text", "source", "page"],
-        return_metadata=wvc.query.MetadataQuery(certainty=True, distance=True)
-    )
-
-    chunks = []
-    for obj in results.objects:
-        certainty = obj.metadata.certainty
-        distance = obj.metadata.distance
-        if certainty >= CERTAINTY_THRESHOLD:
-            chunks.append({
-                "text": obj.properties["text"],
-                "source": obj.properties["source"],
-                "page": obj.properties["page"],
-                "certainty": certainty,
-                "distance": distance
-            })
-
-    # Fallback: if threshold filtered too aggressively, use all results
-    if len(chunks) < 3:
-        print(f"  (threshold filtered to {len(chunks)} chunks — falling back to all results)")
-        chunks = []
-        for obj in results.objects:
-            chunks.append({
-                "text": obj.properties["text"],
-                "source": obj.properties["source"],
-                "page": obj.properties["page"],
-                "certainty": obj.metadata.certainty,
-                "distance": obj.metadata.distance
-            })
-
+    chunks = query_chunks(client, question, question_vector, TOP_K, HYBRID_ALPHA)
     client.close()
 
     # Step 3 — Show retrieved chunks
     print(f"Retrieved {len(chunks)} chunks:")
     for i, chunk in enumerate(chunks, 1):
-        print(f"  [{i}] Page {chunk['page']} | certainty={chunk['certainty']:.3f} — {chunk['text'][:80].strip()}...")
+        print(f"  [{i}] Page {chunk['page']} | score={chunk['score']:.4f} — {chunk['text'][:80].strip()}...")
 
     # Step 4 — Get answer from Ollama
     print("\n--- Querying Ollama ---")
