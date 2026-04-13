@@ -18,8 +18,9 @@ def retrieve_chunks(question, verbose=False):
     return chunks
 
 
-def chat(verbose=False):
+def chat(verbose=False, confidential=True):
     print("\n=== PDF Q&A Chat ===")
+    print(f"Mode: {'confidential (Ollama)' if confidential else 'standard (Groq)'}")
     print("Type your question and press Enter. Type 'exit' or 'quit' to end.")
     if verbose:
         print("(verbose mode on)\n")
@@ -39,7 +40,7 @@ def chat(verbose=False):
             break
 
         chunks = retrieve_chunks(question, verbose=verbose)
-        answer = get_answer(chunks, question, history)
+        answer = get_answer(chunks, question, history, confidential=confidential)
 
         pages = sorted(set(chunk["page"] for chunk in chunks))
         pages_str = ", ".join(f"Page {p}" for p in pages)
@@ -53,4 +54,5 @@ def chat(verbose=False):
 
 if __name__ == "__main__":
     verbose = "--verbose" in sys.argv
-    chat(verbose=verbose)
+    confidential = "--no-confidential" not in sys.argv
+    chat(verbose=verbose, confidential=confidential)
