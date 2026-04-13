@@ -1,8 +1,8 @@
 import sys
 from src.embedder import embed_chunks
-from src.vector_store import get_client
+from src.vector_store import get_client, query_chunks
 from src.llm import get_answer
-from config import COLLECTION_NAME, TOP_K, CERTAINTY_THRESHOLD, MAX_HISTORY_TURNS
+from config import COLLECTION_NAME, TOP_K, MAX_HISTORY_TURNS, HYBRID_ALPHA
 import weaviate.classes as wvc
 
 
@@ -10,40 +10,9 @@ def retrieve_chunks(question):
     question_vector = embed_chunks([{"text": question}])[0]
 
     client = get_client()
-    collection = client.collections.get(COLLECTION_NAME)
-
-    results = collection.query.near_vector(
-        near_vector=question_vector.tolist(),
-        limit=TOP_K,
-        return_properties=["text", "source", "page"],
-        return_metadata=wvc.query.MetadataQuery(certainty=True, distance=True)
-    )
-
-    chunks = []
-    for obj in results.objects:
-        certainty = obj.metadata.certainty
-        if certainty >= CERTAINTY_THRESHOLD:
-            chunks.append({
-                "text": obj.properties["text"],
-                "source": obj.properties["source"],
-                "page": obj.properties["page"],
-                "certainty": certainty,
-                "distance": obj.metadata.distance
-            })
-
-    if len(chunks) < 3:
-        print(f"  (threshold filtered to {len(chunks)} chunks — falling back to all results)")
-        chunks = []
-        for obj in results.objects:
-            chunks.append({
-                "text": obj.properties["text"],
-                "source": obj.properties["source"],
-                "page": obj.properties["page"],
-                "certainty": obj.metadata.certainty,
-                "distance": obj.metadata.distance
-            })
-
+    chunks = query_chunks(client, question, question_vector, TOP_K, HYBRID_ALPHA)
     client.close()
+
     return chunks
 
 
@@ -65,7 +34,7 @@ def chat():
 
         # Retrieve chunks
         chunks = retrieve_chunks(question)
-        print(f"  Retrieved {len(chunks)} chunks\n")
+        print(f"  Retrieved {len(chunks)} chunks | scores: {[round(c['score'], 4) for c in chunks]}\n")
 
         # Get answer with history
         answer = get_answer(chunks, question, history)
