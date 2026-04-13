@@ -5,12 +5,15 @@ from src.loader import load_pdf
 from src.chunker import chunk_pages
 from src.embedder import embed_chunks
 from src.vector_store import get_client, setup_collection, store_chunks
+from src.table_processor import process_tables
 from config import METADATA_PATH
+
 
 def ingest(pdf_path):
     print(f"\n--- Loading PDF ---")
-    pages, metadata = load_pdf(pdf_path)
+    pages, tables, metadata = load_pdf(pdf_path)
     print(f"Loaded {len(pages)} pages")
+    print(f"Found {len(tables)} tables")
     print(f"Metadata: {metadata}")
 
     print(f"\n--- Saving metadata ---")
@@ -20,19 +23,27 @@ def ingest(pdf_path):
     print(f"Saved to {METADATA_PATH}")
 
     print(f"\n--- Chunking ---")
-    chunks = chunk_pages(pages)
-    print(f"Created {len(chunks)} chunks")
+    text_chunks = chunk_pages(pages)
+    print(f"Created {len(text_chunks)} text chunks")
+
+    print(f"\n--- Processing tables ---")
+    table_chunks = process_tables(tables, pdf_path)
+    print(f"Created {len(table_chunks)} table chunks")
+
+    all_chunks = text_chunks + table_chunks
+    print(f"Total chunks: {len(all_chunks)}")
 
     print(f"\n--- Embedding ---")
-    vectors = embed_chunks(chunks)
+    vectors = embed_chunks(all_chunks)
 
     print(f"\n--- Storing in Weaviate ---")
     client = get_client()
     setup_collection(client)
-    store_chunks(client, chunks, vectors)
+    store_chunks(client, all_chunks, vectors)
     client.close()
 
     print(f"\nIngestion complete!")
+
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
