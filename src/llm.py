@@ -9,8 +9,29 @@ from config import OLLAMA_BASE_URL, OLLAMA_MODEL, GROQ_BASE_URL, GROQ_MODEL
 load_dotenv()
 
 
-def build_prompt(chunks, question, history=None):
+def _format_metadata(doc_metadata):
+    """Format document metadata as a prompt prefix string."""
+    if not doc_metadata:
+        return ""
+
+    lines = []
+    if doc_metadata.get("title"):
+        lines.append(f"Document title: {doc_metadata['title']}")
+    if doc_metadata.get("authors"):
+        lines.append(f"Authors: {doc_metadata['authors']}")
+    if doc_metadata.get("institution"):
+        lines.append(f"Institution: {doc_metadata['institution']}")
+
+    if not lines:
+        return ""
+
+    return "Document information:\n" + "\n".join(lines)
+
+
+def build_prompt(chunks, question, history=None, doc_metadata=None):
     context = "\n\n".join([chunk["text"] for chunk in chunks])
+
+    metadata_text = _format_metadata(doc_metadata)
 
     history_text = ""
     if history:
@@ -21,6 +42,8 @@ def build_prompt(chunks, question, history=None):
     prompt = f"""Use the following context to answer the question.
 If the answer is not in the context, say "I don't know".
 
+{metadata_text}
+
 Context:
 {context}
 
@@ -29,7 +52,7 @@ Answer:"""
     return prompt
 
 
-def get_answer(chunks, question, history=None, confidential=True):
+def get_answer(chunks, question, history=None, confidential=True, doc_metadata=None):
 
     if confidential:
         client = OpenAI(
@@ -44,7 +67,7 @@ def get_answer(chunks, question, history=None, confidential=True):
         )
         model = GROQ_MODEL
 
-    prompt = build_prompt(chunks, question, history)
+    prompt = build_prompt(chunks, question, history, doc_metadata)
 
     response = client.chat.completions.create(
         model=model,
